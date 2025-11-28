@@ -1,10 +1,392 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
 
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body>
+    <style type="text/css">
+        .button {
+            display: block;
+            width: 200px;
+            height: 50px;
+            background-color: #5292BF;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px;
+            color: white !important;
+            line-height: 25px;
+            text-decoration: none;
+            margin-top: 5px;
+        }
+
+        dd {
+            margin-top: 10px;
+        }
+
+        div.container {
+            margin-top: 20px;
+        }
+
+        div.center {
+            text-align: center;
+        }
+
+        div.left {
+            text-align: left;
+        }
+
+        div.right {
+            text-align: right;
+            width: 40%;
+            white-space: nowrap;
+        }
+
+        div.padTop {
+            padding-top: 85px;
+        }
+
+        div.top10 {
+            margin-top: 10px;
+        }
+
+        div.top20 {
+            margin-top: 20px;
+        }
+
+        div.tabMarginTop {
+            margin-top: 50px;
+        }
+
+        div.padLeft20 {
+            padding-left: 20px;
+        }
+
+        li.top10 {
+            margin-top: 10px;
+        }
+
+        p.indent {
+            text-indent: 0em;
+        }
+
+        ol.parenAlphaParen {
+            list-style-type: none;
+        }
+
+        li.parenAlphaParen:before {
+            font-weight: bold;
+            content: "(" counter(section, lower-alpha) ") ";
+        }
+
+        li.parenAlphaParen {
+            counter-increment: section;
+        }
+
+        ol.alphaParen {
+            list-style-type: none;
+        }
+
+        li.alphaParen:before {
+            content: counter(section, lower-alpha) ") ";
+        }
+
+        li.alphaParen {
+            counter-increment: section;
+        }
+
+        h2 {
+            display: block;
+            font-size: 1.5em;
+            margin-block-start: 0.83em;
+            margin-block-end: 0.83em;
+            margin-inline-start: 0px;
+            margin-inline-end: 0px;
+            font-weight: bold;
+        }
+
+        h3 {
+            font-size: 1.17em;
+            font-weight: bold;
+        }
+
+        h4 {
+            display: block;
+            margin-block-start: 1.33em;
+            margin-block-end: 1.33em;
+            margin-inline-start: 0px;
+            margin-inline-end: 0px;
+            font-weight: bold;
+        }
+
+        h5 {
+            margin-block-start: 0em !important;
+            margin-block-end: 0em !important;
+        }
+
+        h6 {
+            margin-block-start: 0em !important;
+            margin-block-end: 0em !important;
+        }
+    </style>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3"><a class="button" href="#approval">Approval Process</a></div>
+            <div class="col-md-3"><a class="button" href="#variance">Variance Process</a></div>
+            <div class="col-md-3"><a class="button" href="#houseColors">House Colors</a></div>
+            <div class="col-md-3"><a class="button" href="#mailbox">Mailbox Specs</a></div>
+        </div>
+    </div>
+    <div id="approval" class="container">
+        <div class="row">
+            <div class="col">
+                <div class="title">Approval Process</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">Our covenants require that any exterior modifications to a property be approved by
+                Declarant, which is the GCA. Simple maintenance, on the other hand, does not require approval.
+                <ol>
+                    <li>To start the process:
+                        <ul>
+                            <li>Download the Variance form. Fill it out and mail documents to:<br><strong>Gleneagle
+                                    Civic Association Attn: Architectural Control Committee<br>P.O. Box 31<br>Monument,
+                                    CO 80132 </strong></li>
+                            <li>You may also take a picture of the variance form and upload when you fill out the ACC
+                                request mentioned in #6</li>
+                        </ul>
+                    </li>
+                    <li>Once the Architectural Control Chairperson receives your request, they will review it and, if
+                        necessary, contact you for additional information.</li>
+                    <li>The Chairperson will approve the request or present the request to the GCA Board of Directors at
+                        the next monthly Board meeting with his recommendation for approval, approval with
+                        modifications, or disapproval. The Board will make a decision, and the Chairperson will inform
+                        you of the decision. You are welcome to attend the meeting, but it is not required.</li>
+                    <li>You are welcome to attend the meeting, but it is not required. You can use the
+                        <strong>Home</strong> or <strong>Events</strong> menu item to find the next scheduled meeting.
+                    </li>
+                    <li>If you have questions visit <a href="/contact-us-1" target="_blank" rel="noopener"> Email Us,
+                            Send To (Architectural Control)</a></li>
+                    <li>If you would like to submit an ACC request, visit <a
+                            href="/project-requests/?view=usersubmit&amp;cat=2">GCA Requests</a></li>
+                </ol>
+            </div>
+            <div class="col-md-12"><strong>Typical exterior modifications include:</strong>
+                <ol>
+                    <li>An addition to the principal dwelling, such as a porch or deck or an extra bay in the garage
+                    </li>
+                    <li>Construction of an auxiliary building, such as a storage shed, or an enclosure for a boat or RV
+                    </li>
+                    <li>Installation of fencing of any kind, a new roof if the material is different from what is
+                        beingreplaced, or a satellite or Internet access antenna</li>
+                    <li>Enlargement of a driveway to accommodate an additional vehicle</li>
+                    <li>Erection of a playset or other play equipment that will be in place indefinitely</li>
+                    <li>Painting any structure a color different from its existing color</li>
+                    <li>Modifying the landscaping in any significant manner</li>
+                </ol>
+            </div>
+            <div class="col-md-12"><strong>Common types of maintenance not requiring approval include:</strong>
+                <ol>
+                    <li>Painting any structure the same colors that already exist</li>
+                    <li>Replacing the driveway surface with the same material that already exists</li>
+                    <li>Replacing dead trees, shrubs, and other plants with identical or similar ones</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div id="variance" class="container padTop">
+        <div class="row">
+            <div class="col">
+                <div class="title">Variance Process</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col"><a href="/editor_upload/File/ACC/VarianceProcessingForm.pdf" target="_blank"
+                    rel="noopener">Variance Form</a></div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <h4>APPROVAL OF VARIANCES POLICY &amp; PROCEDURES</h4>
+                <h5>Policy Memorandum #2013-2</h5>
+                <h6>March 14, 2013</h6>
+            </div>
+            <div class="col-md-12">
+                <h4>Policy</h4>
+                It is the policy of the Gleneagle Civic Association (GCA), a Colorado nonprofit corporation, as
+                successor in interest to the declarant with respect to the Declaration of Covenants, Restrictions, and
+                Charges for Gleneagle subdivisions, to approve variances of these covenants in an equitable manner
+                consistent with the best interests of all property owners and residents within the GCA community. This
+                will be accomplished by the GCA Board of Directors following the guidance of <a class="decorate"
+                    href="/covenants-1#section-143">Section 143</a> of the Declaration and supported by an Architectural
+                Control Committee (ACC) made up of GCA members. The cornerstone of this policy is that it provides the
+                opportunity for all residents or owners directly affected by a requested variance to make their views
+                known to the Board in advance of its decision, should they choose to do so.
+            </div>
+            <div class="col-md-12">
+                <h4>Architectural Control Committee</h4>
+                The Architectural Control Committee (ACC) shall comprise a Chairperson and sufficient additional members
+                necessary to conduct the business of the committee in an expeditious and effective manner. The committee
+                will receive and examine each request for a variance from a GCA member, submitted in compliance with <a
+                    class="decorate" href="/covenants-1#section-143">Section 143</a> , and process the request as
+                described below. The term &ldquo;variance&rdquo; is interpreted to mean any deviation from the covenant
+                requirements for new residences or existing residences or property.
+            </div>
+            <div class="col-md-12">
+                <h4>Procedures</h4>
+                <div>Upon receipt of a written or electronic request for a variance from a property owner, the
+                    Chairperson of the ACC shall review the package to ensure it has been prepared in accordance with
+                    these guidelines and the documents appended above. If the package has been prepared correctly, it
+                    shall be logged in the GCA Administrative website with all supporting documents and showing the date
+                    and time received. <a href="/editor_upload/File/ACC/VarianceProcessingForm.pdf" target="_blank"
+                        rel="noopener">Variance Form</a></div>
+                <div class="top10">The GCA Board will consider the request at the next regularly scheduled monthly
+                    meeting days following receipt of the variance request package. Any property owners who will be
+                    affected by the variances shall be provided the opportunity to make their views known at the
+                    meeting. At the meeting or within one week after the meeting, the Board shall make its decision, and
+                    the Chairperson of the ACC shall inform the requester in written or electronic communication of the
+                    decision. A record of the decision and all documentation shall be uploaded to the Administrative
+                    website.</div>
+            </div>
+            <div id="accSpecialCircumstances" class="col-md-12">
+                <h4>Special Circumstances</h4>
+                <a class="decorate" href="/covenants-1#section-141">Section 141</a> requires that variance requests must
+                be either approved or disapproved within thirty (30) days of the request. Otherwise, the request shall
+                stand approved. If the timing of the request makes it impossible or impractical for the Board of
+                Directors to review it at a regular meeting, the ACC Chairperson shall have the option of distributing
+                it via e-mail and conducting an e-mail vote.
+                <div>These procedures do not apply to requests governed by the general purpose approvals previously
+                    approved by the Board.</div>
+            </div>
+            <div id="declarationLanguage" class="col-md-12">
+                <h4>Declaration Language</h4>
+                <a class="decorate" href="/covenants-1#section-143">Section 143</a> of the Declaration, under the
+                heading of Variances, states that &ldquo;Declarant shall have authority to grant for a lot or building
+                site a variance from the terms of one or more of the foregoing sections subject to terms and conditions
+                fixed by Declarant as will not be contrary to the interests of the Owners and residents of the
+                Subdivision where, owing to exceptional and extraordinary circumstances, literal enforcement of all of
+                those Sections will result in unnecessary hardship.&rdquo; The Declaration goes on to stipulate that
+                following an application for a variance:
+                <ol type="a">
+                    <li>Declarant shall call a meeting of Owners of adjoining lots &hellip; to be held at
+                        Declarant&rsquo;s principal office, notice of which meeting shall be given to the owners at
+                        least 20 days in advance, at which meeting all Owners shall have opportunity to appear and
+                        express their views. Whether or not anyone appears at the meeting &hellip; Declarant shall
+                        within one week after the meeting either grant or deny the variance.</li>
+                    <li>A variance &hellip; shall run with the lot or building site &hellip;</li>
+                    <li>If a variance is denied another application for a similar variance &hellip; may not be made for
+                        a period of one year.</li>
+                    <li>A variance shall not be granted unless Declarant shall find that all of the following conditions
+                        exist:
+                        <ol type="i">
+                            <li>the variance will not authorize the operation of a use other than private, single-family
+                                residential use;</li>
+                            <li>literal enforcement of the Sections above enumerated will result in unnecessary
+                                hardship;</li>
+                            <li>the variance will not substantially or permanently injure the use of other property in
+                                the Subdivision;</li>
+                            <li>the variance will not alter the essential character of the Subdivision;</li>
+                            <li>the variance will not weaken the general purposes of these covenants;</li>
+                            <li>the variance will be in harmony with the spirit and purpose of these covenants;</li>
+                            <li>the circumstances leading the applicant to seek a variance are unique to the lot or
+                                building site or its owner and are not applicable generally to lots in the Subdivision
+                                or their owners.</li>
+                        </ol>
+                    </li>
+                </ol>
+            </div>
+            <div class="col-md-12 top20">APPROVED BY A VOTE OF THE GCA BOARD OF DIRECTORS ON this 14<sup>th</sup> day of
+                March 2013</div>
+        </div>
+    </div>
+    <div id="houseColors" class="container padTop">
+        <div class="row">
+            <div class="col">
+                <div class="title">House Colors</div>
+            </div>
+        </div>
+        <div class="row top20">
+            <div class="col-md-12">A need has been recognized to establish standards for the exterior colors used on
+                houses and accessory buildings in our community.</div>
+            <div class="col-md-12 top10">The standards listed at Annex A shall be effective for all properties within
+                the GCA community, and shall be applied to all future requests for color changes to houses and accessory
+                buildings. All house colors that exist as of this date are hereby considered &ldquo;Approved.&rdquo;
+            </div>
+            <div class="col-md-12 top10">This Policy Memorandum shall remain in effect until such time that the
+                "Standards for House Colors" have been incorporated in the GCA Rules &amp; Regulations.</div>
+            <div class="col-md-12 top10">The foregoing Policy Memorandum was approved and adopted by the Board of
+                Directors at a duly called and held meeting of the Board of Directors of the Association on 9 September
+                2010, as witnessed by Art Nielsen, 2010 President</div>
+            <div class="col-md-12 top10">
+                <h4>Acceptable Colors</h4>
+                <dl>
+                    <dd>The houses in our community are mostly of contemporary, southwestern or western design. The
+                        colors you select should be appropriate to the style of your house</dd>
+                    <dd>Subdued earth tones are the existing dominant color themes and are the preferred choice in house
+                        colors, both for the main body of the house and for trims</dd>
+                    <dd>Most traditional house colors will be acceptable.</dd>
+                    <dd>House colors should harmonize with the colors of other houses in the GCA, not just those in the
+                        immediate vicinity.</dd>
+                    <dd>House colors should blend with the surrounding features on the lot.</dd>
+                    <dd>Wood stains shall project a &ldquo;natural&rdquo; wood appearance</dd>
+                </dl>
+            </div>
+            <div class="col-md-12 top10">
+                <h4>Unacceptable Colors</h4>
+                <dl>
+                    <dd>Very bold or bright colors. High gloss paints are discouraged.</dd>
+                    <dd>Very dark colors, except for accent trim. All fluorescent, neon, day-glo, or similar colors.
+                    </dd>
+                    <dd>Colors that are in obvious discord with the surrounding area and with the dominant color themes
+                        found within the GCA.</dd>
+                    <dd>Colors that overpower the surroundings.</dd>
+                    <dd>Primary colors - pure red, yellow, blue, green, grown, black, white - should not be considered
+                        as the &ldquo;main&rdquo; house color, but may be considered for trim or accent depending on the
+                        overall impact of the paint scheme. Pinks, purples, oranges,</dd>
+                    <dd>Metallic colors such as gold, silver, or bronze.</dd>
+                    <dd>Colors that are non-traditional or unusual for houses in our area, such as lime-green, teal,
+                        violet, etc.</dd>
+                    <dd>Generally, house colors that mimic those of adjacent houses or directly across the street may
+                        not be approved because the resultant &ldquo;cookie cutter&rdquo; theme would be in contrast to
+                        the character of the GCA neighborhoods.</dd>
+                </dl>
+            </div>
+            <div class="col-md-12 top10">
+                <h4>Color Coordination</h4>
+                <dl>
+                    <dd>Multiple colors must harmonize with one another.</dd>
+                    <dd>Colors and materials must blend together to create an attractive and harmonious result.</dd>
+                    <dd>Selected colors must harmonize with other colors on the structure, such as roofing and brick,
+                        and must be harmonious with other colors in the neighborhood.</dd>
+                    <dd>There will be latitude in the selection of trim and accent colors depending on the effect of the
+                        overall paint scheme</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div id="mailbox" class="container padTop">
+        <div class="row">
+            <div class="col">
+                <div class="title">Mailbox Specifications</div>
+            </div>
+        </div>
+        <div class="row top20">
+            <div class="col-md-12 top10">GCA residents are reminded that although you may have a variety of different
+                types and styles of mailboxes, the mailbox post is a standardized and required-format item as stipulated
+                in our Covenants. These wooden mailbox posts are distinctive for our community and reflect the GCA's
+                attempt to create a sense of community and character to Gleneagle. By doing such, we are striving for a
+                pleasant and valuable balance of rural/suburban, structured/unstructured, and individual/community.
+            </div>
+            <div class="col-md-12 top10">Residents can purchase the wood to use in making this standardized mailbox post
+                from places such as Home Depot, Black Forest Lumber or other facility that sells treated wood or
+                rough-cut cedar (any type wood is acceptable as long as the final design/appearance of the mailbox post
+                is as in the drawings below).</div>
+            <div class="col-md-12 top20"><img class="mnw-img-responsive "
+                    style="border-width: 0px; border-style: solid;" src="/editor_upload/File/ACC/MailboxSpec-1.jpg"
+                    alt="" width="596" height="967"></div>
+        </div>
+    </div>
 </body>
+
 </html>
