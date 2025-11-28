@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body>
+    <style type="text/css">
+        #map {
+            /*                top:-700px; */
+            left: 300px;
+            height: 600px;
+            width: 1200px;
+            text-align: center;
+        }
+
+        /* Optional: Makes the sample page fill the window. */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        dd.left10 {
+            margin-left: 20px;
+        }
+
+        div.container {
+            margin-top: 20px;
+        }
+
+        div.center {
+            text-align: center;
+        }
+
+        div.left {
+            text-align: left;
+        }
+
+        div.right {
+            text-align: right;
+            width: 40%;
+            white-space: nowrap;
+        }
+
+        div.top10 {
+            margin-top: 10px;
+        }
+
+        tr {
+            height: 20px;
+        }
+    </style>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2"><input id="allCb" checked="checked" type="checkbox"> <label for="allCb"> <span
+                        class="label-text">All</span> </label></div>
+            <div class="col-md-2"><input id="gcaCb" title="Gleneagle Civic Association" checked="checked"
+                    type="checkbox"> <label for="gcaCb"> <span class="label-text">GCA</span> </label></div>
+            <div class="col-md-2"><input id="dcvCb" checked="checked" type="checkbox"> <label for="dcvCb"> <span
+                        class="label-text">Donala&nbsp;Villas</span></label></div>
+            <div class="col-md-2"><input id="evoCb" checked="checked" type="checkbox"> <label for="evoCb"> <span
+                        class="label-text">Eagle Villas</span></label></div>
+            <div class="col-md-2"><input id="gnaCb" checked="checked" type="checkbox"> <label for="gnaCb"> <span
+                        class="label-text">Gleneagle North</span></label></div>
+            <div class="col-md-2" style="white-space: nowrap;"><input id="gthCb" checked="checked" type="checkbox">
+                <label for="gthCb"> <span class="label-text">Gleneagle Townhomes</span></label></div>
+        </div>
+        <div class="row top10">
+            <div class="col-md-2" style="white-space: nowrap;"><input id="gevCb" checked="checked" type="checkbox">
+                <label for="gevCb"> <span class="label-text">Gleneagle Village</span></label></div>
+            <div class="col-md-2"><input id="mmdCb" checked="checked" type="checkbox"> <label for="mmdCb"> <span
+                        class="label-text">Morning View</span></label></div>
+            <div class="col-md-2"><input id="nchCb" checked="checked" type="checkbox"> <label for="nchCb"> <span
+                        class="label-text">Nicholas Court</span></label></div>
+            <div class="col-md-2"><input id="sheCb" checked="checked" type="checkbox"> <label for="sheCb"> <span
+                        class="label-text">Sun Hills Estates</span></label></div>
+            <div class="col-md-2" style="white-space: nowrap;"><input id="staCb" checked="checked" type="checkbox">
+                <label for="staCb"> <span class="label-text">Sunrise Townhomes</span></label></div>
+        </div>
+    </div>
+    <div><input id="gca-name" type="hidden" value="&lt;b&gt;Gleneagle Civic Association&lt;/b&gt;"> <input id="gca-pres"
+            type="hidden" value="&lt;b&gt;President:&lt;/b&gt; Gordon Streich"> <input id="gca-ct" type="hidden"
+            value="703 Parcels"> <input id="gna-name" type="hidden" value="&lt;b&gt;Gleneagle North&lt;/b&gt;"> <input
+            id="gna-pres" type="hidden" value="&lt;b&gt;President:&lt;/b&gt; John Rickman"> <input id="gna-ct"
+            type="hidden" value="483 Parcels"> <input id="gna-url" type="hidden" value="http://gnhoa.com"> <input
+            id="gna-url-txt" type="hidden" value="gnhoa.com"> <input id="gev-name" type="hidden"
+            value="&lt;b&gt;Gleneagle Village&lt;/b&gt;"> <input id="gth-name" type="hidden"
+            value="&lt;b&gt;Gleneagle Townhomes&lt;/b&gt;"> <input id="gth-pres" type="hidden"
+            value="&lt;b&gt;President:&lt;/b&gt; Eli Harman"> <input id="gth-ct" type="hidden" value="41 Parcels">
+        <input id="dcv-name" type="hidden" value="&lt;b&gt;Donala Club Villa&lt;/b&gt;"> <input id="dcv-pres"
+            type="hidden" value="&lt;b&gt;President:&lt;/b&gt; Toni Fleming"> <input id="dcv-ct" type="hidden"
+            value="34 Parcels"> <input id="dcv-url" type="hidden" value="https://donalaclubvillas.com"> <input
+            id="dcv-url-txt" type="hidden" value="donalaclubvillas.com"> <input id="evo-name" type="hidden"
+            value="&lt;b&gt;Eagle Villas&lt;/b&gt;"> <input id="evo-pres" type="hidden"
+            value="&lt;b&gt;President:&lt;/b&gt; Jay Kelley"> <input id="evo-ct" type="hidden" value="28 Parcels">
+        <input id="she-name" type="hidden" value="&lt;b&gt;Sun Hills Estates&lt;/b&gt;"> <input id="she-pres"
+            type="hidden" value="&lt;b&gt;President:&lt;/b&gt; Chad Brandon"> <input id="she-ct" type="hidden"
+            value="148 Parcels"> <input id="she-url" type="hidden" value="http://sunhillsestates.org/"> <input
+            id="she-url-txt" type="hidden" value="sunhillsestates.org"> <input id="nch-name" type="hidden"
+            value="&lt;b&gt;Nichlas Court&lt;/b&gt;"> <input id="nch-pres" type="hidden"
+            value="&lt;b&gt;President:&lt;/b&gt; Mike Torreano"> <input id="nch-ct" type="hidden" value="32 Parcels">
+        <input id="sta-name" type="hidden" value="&lt;b&gt;Sunrise Townhome Association&lt;/b&gt;"> <input id="sta-pres"
+            type="hidden" value="&lt;b&gt;President:&lt;/b&gt; Gary Olson"> <input id="sta-ct" type="hidden"
+            value="28 Parcels"> <input id="mmd-name" type="hidden" value="&lt;b&gt;Morning View&lt;/b&gt;"> <input
+            id="mmd-url" type="hidden" value="http://landhuisco.com/portfolio/morningview-metropolitan-district/">
+        <input id="mmd-url-txt" type="hidden" value="Morning View Metropolitan District"></div>
+</body>
+
+</html>
