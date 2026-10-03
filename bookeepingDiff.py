@@ -1,7 +1,21 @@
+import argparse
 from datetime import datetime
 import numpy as np
 import pandas as pd
 import re
+
+# Set up command-line argument parsing
+parser = argparse.ArgumentParser(
+    description='Reconcile CompKeeper master file with GCA export.'
+)
+parser.add_argument(
+    '-D',
+    '--debug',
+    action='store_true',
+    help='Enable address matching debug prints',
+)
+args = parser.parse_args()
+DEBUG_MODE = args.debug
 
 # Load files
 master_file = 'comp-keep-2006-9-25.xls'
@@ -25,16 +39,33 @@ def find_column(df, keyword):
 
 col_status = find_column(gca_df, 'status')
 col_level = find_column(gca_df, 'user level') or find_column(gca_df, 'level')
+
+# Explicitly use Column M (index 12) for GCA Mailing Address per user confirmation
+if len(gca_df.columns) > 12:
+  col_gca_mailing = gca_df.columns[12]
+else:
+  raise IndexError(
+      'GCA file does not have enough columns to access Column M (index 12).'
+  )
+
 col_prop = (
     find_column(gca_df, 'property name')
     or find_column(gca_df, 'property')
     or find_column(gca_df, 'address')
 )
 
-if not col_status or not col_level or not col_prop:
+# --- STARTUP DIAGNOSTIC PRINT ---
+print('=== COLUMN DETECTION DIAGNOSTICS ===')
+print(f'GCA Status Column     : {col_status}')
+print(f'GCA User Level Column : {col_level}')
+print(f'GCA Mailing Address   : {col_gca_mailing} (Column M)')
+print(f'GCA Total Rows Loaded : {len(gca_df)}')
+print(f'Master Total Rows     : {len(master_df)}')
+print('====================================\n')
+
+if not col_status or not col_level or not col_gca_mailing:
   raise KeyError(
-      'Could not automatically locate required GCA columns (Status, User Level,'
-      ' Property/Address).'
+      'Could not automatically locate required GCA columns (Status, User Level).'
   )
 
 # Filter out Expired and Level 3 users from GCA active consideration
@@ -44,7 +75,7 @@ gca_active = gca_df[
 ].copy()
 
 
-# Helper function to clean street numbers
+# Helper function to clean street numbers (handles Excel float conversion like 105.0 -> 105)
 def clean_street(val):
   if pd.isna(val):
     return ''
@@ -59,21 +90,27 @@ master_df['Full_Address'] = (
     master_df['Street_Num'] + ' ' + master_df['Address 1'].astype(str)
 ).str.strip()
 
+# --- COMPKEEPER MAILING ADDRESS FROM COLUMNS F & G (Indices 5 and 6) ---
+col_f = master_df.columns[5] if len(master_df.columns) > 5 else ''
+col_g = master_df.columns[6] if len(master_df.columns) > 6 else ''
 
-# Robust Address Normalization for matching
+# Clean column F street number to prevent floating-point ".0" issues
+master_df['CK_Street_Num'] = master_df[col_f].apply(clean_street)
+master_df['CompKeeper_Mailing'] = (
+    master_df['CK_Street_Num']
+    + ' '
+    + master_df[col_g].astype(str).str.strip()
+).str.strip()
+
+
+# Robust Address Normalization that splits on commas, carets, or newlines to isolate the street address
 def normalize_base_address(addr):
   if pd.isna(addr):
     return ''
-  addr_first = (
-      str(addr)
-      .split(',')[0]
-      .split('\r\n')[0]
-      .split('\n')[0]
-      .split('^')[0]
-      .strip()
-      .lower()
-  )
-  addr_first = re.sub(r'[^\w\s]', '', addr_first)
+  addr_str = str(addr)
+  # Split by comma, caret (^), or newline to get just the first line (street address)
+  first_part = re.split(r'[,^\n\r]+', addr_str)[0].strip().lower()
+  first_part = re.sub(r'[^\w\s]', '', first_part)
 
   suffixes = [
       'drive',
@@ -98,15 +135,15 @@ def normalize_base_address(addr):
       'ln',
   ]
 
-  words = addr_first.split()
+  words = first_part.split()
   words = [w for w in words if w not in suffixes]
   return ' '.join(words)
 
 
-master_df['clean_base_address'] = master_df['Full_Address'].apply(
+master_df['clean_base_address'] = master_df['CompKeeper_Mailing'].apply(
     normalize_base_address
 )
-gca_active['clean_base_address'] = gca_active[col_prop].apply(
+gca_active['clean_base_address'] = gca_active[col_gca_mailing].apply(
     normalize_base_address
 )
 
@@ -117,15 +154,20 @@ change_log = []
 
 gca_groups = dict(list(gca_active.groupby('clean_base_address')))
 
+# Diagnostic check on group dictionary size
+print(f'Unique GCA base address groups created: {len(gca_groups)}')
+if len(gca_groups) > 0:
+  sample_keys = list(gca_groups.keys())[:5]
+  print(f'Sample GCA normalized keys: {sample_keys}\n')
 
-# Address Delimiting Rule: remove line feeds, replace first feed with ^^, remaining with ^
+
+# Caret-delimited Address formatter for the 'Address' column
 def format_delimited_address(m_row):
   full_addr = m_row['Full_Address']
   city = str(m_row.get('City', '')).strip()
   state = str(m_row.get('State', 'Color')).strip()
   zip_val = int(m_row['Zip Code']) if pd.notna(m_row['Zip Code']) else ''
 
-  # Construct multi-line address representation
   raw_lines = f'{full_addr}\n{city}\n{state}\n{zip_val}'
   lines = [l.strip() for l in raw_lines.split('\n') if l.strip()]
 
@@ -134,7 +176,6 @@ def format_delimited_address(m_row):
   if len(lines) == 1:
     return lines[0] + '^'
 
-  # First feed -> ^^, remaining feeds -> ^
   res = lines[0] + '^^' + lines[1]
   for l in lines[2:]:
     res += '^' + l
@@ -172,13 +213,33 @@ for idx, m_row in master_df.iterrows():
   p1_name_full = f'{m_f1} {m_l1}'.strip()
   gca_sub = gca_groups.get(c_addr, pd.DataFrame())
 
+  # --- GATED DEBUG PRINT (ASCII Safe) ---
+  if DEBUG_MODE:
+    raw_ck_mailing = m_row['CompKeeper_Mailing']
+    match_status = 'MATCH FOUND' if len(gca_sub) > 0 else 'MISS (Added)'
+    print(
+        f'[CK Mailing]: "{raw_ck_mailing}" (Cleaned: "{c_addr}") ---> GCA'
+        f' Lookup: {match_status}'
+    )
+    if len(gca_sub) > 0:
+      sample_gca_raw = str(gca_sub.iloc[0].get(col_gca_mailing, ''))
+      print(
+          f'   -> Matched GCA Raw: "{sample_gca_raw}" | Group Count:'
+          f' {len(gca_sub)}'
+      )
+  # ------------------------------------
+
   zip_val = int(m_row['Zip Code']) if pd.notna(m_row['Zip Code']) else ''
   city = str(m_row.get('City', '')).strip()
   state = str(m_row.get('State', 'Color')).strip()
   full_addr = m_row['Full_Address']
 
   delimited_addr = format_delimited_address(m_row)
-  prop_addr_display = f'{full_addr}\n{city}, {state} {zip_val}'
+  prop_addr_display = (
+      f'{full_addr}, {city}, {state} {zip_val}'
+      if zip_val
+      else f'{full_addr}, {city}, {state}'
+  )
 
   if len(gca_sub) == 0:
     change_log.append({'Reason': 'Address not in GCA'})
@@ -190,7 +251,9 @@ for idx, m_row in master_df.iterrows():
     template['Bookeeping Acct'] = m_acct
     template[col_level] = 1
     template['Primary User'] = np.nan
-    template['Property Address'] = prop_addr_display
+    template[col_gca_mailing] = prop_addr_display
+    if col_prop and col_prop in template:
+      template[col_prop] = prop_addr_display
     template['Address'] = delimited_addr
     template['Property Group'] = 'Property in good standing'
     template['Date Added'] = today_str
@@ -248,6 +311,7 @@ for idx, m_row in master_df.iterrows():
         r_dict = r.to_dict()
         r_dict['Bookeeping Acct'] = m_acct
         r_dict['Address'] = delimited_addr
+        r_dict[col_gca_mailing] = prop_addr_display
         update_list.append(r_dict)
     else:
       reasons = []
@@ -278,6 +342,7 @@ for idx, m_row in master_df.iterrows():
         r1[col_level] = 1
         r1['Primary User'] = np.nan
         r1['Address'] = delimited_addr
+        r1[col_gca_mailing] = prop_addr_display
         update_list.append(r1.to_dict())
       else:
         template = gca_sub.iloc[0].copy()
@@ -287,7 +352,7 @@ for idx, m_row in master_df.iterrows():
         template['Bookeeping Acct'] = m_acct
         template[col_level] = 1
         template['Primary User'] = np.nan
-        template['Property Address'] = prop_addr_display
+        template[col_gca_mailing] = prop_addr_display
         template['Address'] = delimited_addr
         template['Date Added'] = today_str
         add_list.append(template.to_dict())
@@ -302,6 +367,7 @@ for idx, m_row in master_df.iterrows():
           r2[col_level] = 2
           r2['Primary User'] = p1_name_full
           r2['Address'] = delimited_addr
+          r2[col_gca_mailing] = prop_addr_display
           update_list.append(r2.to_dict())
         else:
           template2 = gca_sub.iloc[0].copy()
@@ -311,7 +377,7 @@ for idx, m_row in master_df.iterrows():
           template2['Bookeeping Acct'] = m_acct
           template2[col_level] = 2
           template2['Primary User'] = p1_name_full
-          template2['Property Address'] = prop_addr_display
+          template2[col_gca_mailing] = prop_addr_display
           template2['Address'] = delimited_addr
           template2['Date Added'] = today_str
           add_list.append(template2.to_dict())
@@ -320,27 +386,41 @@ for idx, m_row in master_df.iterrows():
           for _, r in gca_lvl2.iterrows():
             delete_list.append(r.to_dict())
 
-# Save outputs with Column L (index 11) safety stamp
+# Save outputs as Excel (.xlsx) files with Column L (index 11) safety stamp
 delete_df = pd.DataFrame(delete_list)
 if not delete_df.empty and delete_df.shape[1] > 11:
   delete_df.iloc[:, 11] = today_str
-delete_df.to_csv('gca_records_to_delete.csv', index=False)
-
-add_df = pd.DataFrame(add_list)
-if not add_df.empty and add_df.shape[1] > 11:
-  add_df.iloc[:, 11] = today_str
-add_df.to_csv('gca_records_to_add.csv', index=False)
+delete_df.to_excel('gca_records_to_delete.xlsx', index=False)
 
 update_df = pd.DataFrame(update_list)
 if not update_df.empty and update_df.shape[1] > 11:
   update_df.iloc[:, 11] = today_str
-update_df.to_csv('gca_records_to_update.csv', index=False)
+update_df.to_excel('gca_records_to_update.xlsx', index=False)
+
+add_df = pd.DataFrame(add_list)
+if not add_df.empty and add_df.shape[1] > 11:
+  add_df.iloc[:, 11] = today_str
+add_df.to_excel('gca_records_to_add.xlsx', index=False)
+
+# Calculate Add counts broken down by Level 1 and Level 2
+add_l1 = (
+    len(add_df[add_df[col_level] == 1])
+    if not add_df.empty and col_level in add_df.columns
+    else 0
+)
+add_l2 = (
+    len(add_df[add_df[col_level] == 2])
+    if not add_df.empty and col_level in add_df.columns
+    else 0
+)
 
 # Print Summary Breakdown
 df_log = pd.DataFrame(change_log)
 print('=== CHANGE REASONS BREAKDOWN ===')
 print(df_log['Reason'].value_counts())
 print('\n=== FILE TOTALS ===')
-print(f'Add:    {len(add_list)}')
+print(
+    f'Add:    {len(add_list)} (Level 1: {add_l1}, Level 2: {add_l2})'
+)
 print(f'Update: {len(update_list)}')
 print(f'Delete: {len(delete_list)}')
