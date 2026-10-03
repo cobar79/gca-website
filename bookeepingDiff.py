@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import re
 
-# Load files (Update master filename as needed)
+# Load files
 master_file = 'comp-keep-2006-9-25.xls'
 gca_file = 'gca-export-all-users.csv'
 
@@ -11,13 +11,36 @@ xl = pd.ExcelFile(master_file)
 master_df = pd.read_excel(xl, sheet_name=xl.sheet_names[0])
 gca_df = pd.read_csv(gca_file)
 
-# Get current date formatted as MM/DD/YYYY for new records
+# Get current date formatted for new records
 today_str = datetime.today().strftime('%m/%d/%Y')
+
+
+# Helper function to find columns flexibly
+def find_column(df, keyword):
+  for col in df.columns:
+    if keyword.lower() in str(col).lower():
+      return col
+  return None
+
+
+col_status = find_column(gca_df, 'status')
+col_level = find_column(gca_df, 'user level') or find_column(gca_df, 'level')
+col_prop = (
+    find_column(gca_df, 'property name')
+    or find_column(gca_df, 'property')
+    or find_column(gca_df, 'address')
+)
+
+if not col_status or not col_level or not col_prop:
+  raise KeyError(
+      'Could not automatically locate required GCA columns (Status, User Level,'
+      ' Property/Address).'
+  )
 
 # Filter out Expired and Level 3 users from GCA active consideration
 gca_active = gca_df[
-    (gca_df['Status'].astype(str).str.lower() == 'active')
-    & (gca_df['User Level'] != 3)
+    (gca_df[col_status].astype(str).str.lower() == 'active')
+    & (gca_df[col_level] != 3)
 ].copy()
 
 
@@ -37,11 +60,19 @@ master_df['Full_Address'] = (
 ).str.strip()
 
 
-# Robust Address Normalization
+# Robust Address Normalization for matching
 def normalize_base_address(addr):
   if pd.isna(addr):
     return ''
-  addr_first = str(addr).split('\r\n')[0].split('\n')[0].strip().lower()
+  addr_first = (
+      str(addr)
+      .split(',')[0]
+      .split('\r\n')[0]
+      .split('\n')[0]
+      .split('^')[0]
+      .strip()
+      .lower()
+  )
   addr_first = re.sub(r'[^\w\s]', '', addr_first)
 
   suffixes = [
@@ -63,6 +94,8 @@ def normalize_base_address(addr):
       'blvd',
       'road',
       'rd',
+      'lane',
+      'ln',
   ]
 
   words = addr_first.split()
@@ -73,7 +106,7 @@ def normalize_base_address(addr):
 master_df['clean_base_address'] = master_df['Full_Address'].apply(
     normalize_base_address
 )
-gca_active['clean_base_address'] = gca_active['Property Name'].apply(
+gca_active['clean_base_address'] = gca_active[col_prop].apply(
     normalize_base_address
 )
 
@@ -84,6 +117,33 @@ change_log = []
 
 gca_groups = dict(list(gca_active.groupby('clean_base_address')))
 
+
+# Address Delimiting Rule: remove line feeds, replace first feed with ^^, remaining with ^
+def format_delimited_address(m_row):
+  full_addr = m_row['Full_Address']
+  city = str(m_row.get('City', '')).strip()
+  state = str(m_row.get('State', 'Color')).strip()
+  zip_val = int(m_row['Zip Code']) if pd.notna(m_row['Zip Code']) else ''
+
+  # Construct multi-line address representation
+  raw_lines = f'{full_addr}\n{city}\n{state}\n{zip_val}'
+  lines = [l.strip() for l in raw_lines.split('\n') if l.strip()]
+
+  if not lines:
+    return ''
+  if len(lines) == 1:
+    return lines[0] + '^'
+
+  # First feed -> ^^, remaining feeds -> ^
+  res = lines[0] + '^^' + lines[1]
+  for l in lines[2:]:
+    res += '^' + l
+
+  if not res.endswith('^'):
+    res += '^'
+  return res
+
+
 for idx, m_row in master_df.iterrows():
   c_addr = m_row['clean_base_address']
   if not c_addr:
@@ -92,7 +152,6 @@ for idx, m_row in master_df.iterrows():
   m_f1 = str(m_row.get('First Name', '')).strip()
   m_l1 = str(m_row.get('Last Name', '')).strip()
 
-  # Email Fix: Take primary email if semicolon-separated
   raw_email = str(m_row.get('Email', '')).strip()
   m_email = (
       re.split(r'[;,]', raw_email)[0].strip() if pd.notna(raw_email) else ''
@@ -100,11 +159,9 @@ for idx, m_row in master_df.iterrows():
   if m_email.lower() == 'nan':
     m_email = ''
 
-  # --- ACCOUNT FIX: Grab directly from 'Account #' and preserve alphanumeric codes ---
   m_acct = str(m_row.get('Account #', m_row.get('Account', ''))).strip()
   if m_acct.lower() == 'nan':
     m_acct = ''
-  # ---------------------------------------------------------------------------------
 
   m_f2 = str(m_row.get('2nd First Name', '')).strip()
   m_l2 = str(m_row.get('2nd Last Name', '')).strip()
@@ -113,8 +170,15 @@ for idx, m_row in master_df.iterrows():
   )
 
   p1_name_full = f'{m_f1} {m_l1}'.strip()
-
   gca_sub = gca_groups.get(c_addr, pd.DataFrame())
+
+  zip_val = int(m_row['Zip Code']) if pd.notna(m_row['Zip Code']) else ''
+  city = str(m_row.get('City', '')).strip()
+  state = str(m_row.get('State', 'Color')).strip()
+  full_addr = m_row['Full_Address']
+
+  delimited_addr = format_delimited_address(m_row)
+  prop_addr_display = f'{full_addr}\n{city}, {state} {zip_val}'
 
   if len(gca_sub) == 0:
     change_log.append({'Reason': 'Address not in GCA'})
@@ -124,15 +188,10 @@ for idx, m_row in master_df.iterrows():
     template['Last Name'] = m_l1
     template['Email Address'] = m_email
     template['Bookeeping Acct'] = m_acct
-    template['User Level'] = 1
+    template[col_level] = 1
     template['Primary User'] = np.nan
-    template['Property Address'] = (
-        f"{m_row['Full_Address']}\n{m_row['City']}, {m_row['State']}"
-        f" {int(m_row['Zip Code']) if pd.notna(m_row['Zip Code']) else ''}"
-    )
-    template['Address'] = (
-        f"{m_row['Full_Address']}^^{m_row['City']}^{m_row['State']}^{int(m_row['Zip Code']) if pd.notna(m_row['Zip Code']) else ''}^"
-    )
+    template['Property Address'] = prop_addr_display
+    template['Address'] = delimited_addr
     template['Property Group'] = 'Property in good standing'
     template['Date Added'] = today_str
     add_list.append(template.to_dict())
@@ -143,13 +202,13 @@ for idx, m_row in master_df.iterrows():
       template2['Last Name'] = m_l2
       template2['Email Address'] = np.nan
       template2['Bookeeping Acct'] = m_acct
-      template2['User Level'] = 2
+      template2[col_level] = 2
       template2['Primary User'] = p1_name_full
       template2['Date Added'] = today_str
       add_list.append(template2.to_dict())
   else:
-    gca_lvl1 = gca_sub[gca_sub['User Level'] == 1]
-    gca_lvl2 = gca_sub[gca_sub['User Level'] == 2]
+    gca_lvl1 = gca_sub[gca_sub[col_level] == 1]
+    gca_lvl2 = gca_sub[gca_sub[col_level] == 2]
 
     has_g1 = len(gca_lvl1) > 0
     has_g2 = len(gca_lvl2) > 0
@@ -188,22 +247,18 @@ for idx, m_row in master_df.iterrows():
       for _, r in gca_sub.iterrows():
         r_dict = r.to_dict()
         r_dict['Bookeeping Acct'] = m_acct
+        r_dict['Address'] = delimited_addr
         update_list.append(r_dict)
     else:
       reasons = []
       if not match_p1:
-        if (
-            g_f1.lower() != m_f1.lower()
-            or g_l1.lower() != m_l1.lower()
-            or g_email1.lower() != m_email.lower()
-        ):
-          reasons.append('Level 1 Details Change')
+        reasons.append('Level 1 Details Change')
       if not match_p2:
         if has_p2 and not has_g2:
           reasons.append('Added Level 2 Secondary Person')
         elif not has_p2 and has_g2:
           reasons.append('Removed Level 2 Secondary Person')
-        elif g_f2.lower() != m_f2.lower() or g_l2.lower() != m_l2.lower():
+        else:
           reasons.append('Level 2 Name Change')
 
       change_log.append({
@@ -220,8 +275,9 @@ for idx, m_row in master_df.iterrows():
         r1['Last Name'] = m_l1
         r1['Email Address'] = m_email
         r1['Bookeeping Acct'] = m_acct
-        r1['User Level'] = 1
+        r1[col_level] = 1
         r1['Primary User'] = np.nan
+        r1['Address'] = delimited_addr
         update_list.append(r1.to_dict())
       else:
         template = gca_sub.iloc[0].copy()
@@ -229,8 +285,10 @@ for idx, m_row in master_df.iterrows():
         template['Last Name'] = m_l1
         template['Email Address'] = m_email
         template['Bookeeping Acct'] = m_acct
-        template['User Level'] = 1
+        template[col_level] = 1
         template['Primary User'] = np.nan
+        template['Property Address'] = prop_addr_display
+        template['Address'] = delimited_addr
         template['Date Added'] = today_str
         add_list.append(template.to_dict())
 
@@ -241,8 +299,9 @@ for idx, m_row in master_df.iterrows():
           r2['Last Name'] = m_l2
           r2['Email Address'] = np.nan
           r2['Bookeeping Acct'] = m_acct
-          r2['User Level'] = 2
+          r2[col_level] = 2
           r2['Primary User'] = p1_name_full
+          r2['Address'] = delimited_addr
           update_list.append(r2.to_dict())
         else:
           template2 = gca_sub.iloc[0].copy()
@@ -250,8 +309,10 @@ for idx, m_row in master_df.iterrows():
           template2['Last Name'] = m_l2
           template2['Email Address'] = np.nan
           template2['Bookeeping Acct'] = m_acct
-          template2['User Level'] = 2
+          template2[col_level] = 2
           template2['Primary User'] = p1_name_full
+          template2['Property Address'] = prop_addr_display
+          template2['Address'] = delimited_addr
           template2['Date Added'] = today_str
           add_list.append(template2.to_dict())
       else:
@@ -259,7 +320,7 @@ for idx, m_row in master_df.iterrows():
           for _, r in gca_lvl2.iterrows():
             delete_list.append(r.to_dict())
 
-# Save outputs with Column L (index 11) safety stamp in MM/DD/YYYY format
+# Save outputs with Column L (index 11) safety stamp
 delete_df = pd.DataFrame(delete_list)
 if not delete_df.empty and delete_df.shape[1] > 11:
   delete_df.iloc[:, 11] = today_str
