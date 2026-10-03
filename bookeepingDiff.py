@@ -11,8 +11,8 @@ xl = pd.ExcelFile(master_file)
 master_df = pd.read_excel(xl, sheet_name=xl.sheet_names[0])
 gca_df = pd.read_csv(gca_file)
 
-# Get current date formatted for new records
-today_str = datetime.today().strftime('%Y-%m-%d')
+# Get current date formatted as MM/DD/YYYY for new records
+today_str = datetime.today().strftime('%m/%d/%Y')
 
 # Filter out Expired and Level 3 users from GCA active consideration
 gca_active = gca_df[
@@ -259,10 +259,21 @@ for idx, m_row in master_df.iterrows():
           for _, r in gca_lvl2.iterrows():
             delete_list.append(r.to_dict())
 
-# Save outputs
-pd.DataFrame(delete_list).to_csv('gca_records_to_delete.csv', index=False)
-pd.DataFrame(add_list).to_csv('gca_records_to_add.csv', index=False)
-pd.DataFrame(update_list).to_csv('gca_records_to_update.csv', index=False)
+# Save outputs with Column L (index 11) safety stamp in MM/DD/YYYY format
+delete_df = pd.DataFrame(delete_list)
+if not delete_df.empty and delete_df.shape[1] > 11:
+  delete_df.iloc[:, 11] = today_str
+delete_df.to_csv('gca_records_to_delete.csv', index=False)
+
+add_df = pd.DataFrame(add_list)
+if not add_df.empty and add_df.shape[1] > 11:
+  add_df.iloc[:, 11] = today_str
+add_df.to_csv('gca_records_to_add.csv', index=False)
+
+update_df = pd.DataFrame(update_list)
+if not update_df.empty and update_df.shape[1] > 11:
+  update_df.iloc[:, 11] = today_str
+update_df.to_csv('gca_records_to_update.csv', index=False)
 
 # Print Summary Breakdown
 df_log = pd.DataFrame(change_log)
